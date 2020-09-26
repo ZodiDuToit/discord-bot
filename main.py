@@ -1,13 +1,13 @@
+import os
+from dotenv import load_dotenv
 
 import discord
 from discord.ext import commands
 
-import os
-from dotenv import load_dotenv
-
 load_dotenv()
+
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('')
+GUILD = os.getenv('GUILD')
 
 bot = commands.Bot(command_prefix='!')
 client = discord.Client
@@ -19,7 +19,9 @@ async def on_ready():
 
 #PUBLIC COMMANDS --------------------------------
 
-
+@bot.command(name='ping', help="the bot will respond with 'pong ' if online")
+async def ping(ctx):
+    await ctx.channel.send("pong")
 
 #ADMIN COMMANDS ---------------------------------
 
@@ -71,30 +73,18 @@ async def ban (ctx, member:discord.User=None, reason=None):
 @bot.command(name="unban", help="unbans member")
 @commands.has_permissions(administrator=True)
 
-async def unban(ctx, member):
+async def unban(ctx, member: discord.User= None):
+
+    await ctx.guild.unban(member)
+    await ctx.send(f'Unbanned {member.name}')
+
+    member.send(f"You have been unbanned from {ctx.guild}")
     
-    banned_users = await ctx.guild.bans()
-    print(banned_users)
-    member_name, member_discriminator = member.split("#")
-
-    for ban_entry in banned_users:
-        user = ban_entry.user
-
-        if (user.name, user.discriminator) == (member_name, member_discriminator):
-
-            await ctx.guild.unban(user)
-            await ctx.send(f'Unbanned {user.mention}')
-            
-            user.send(f"You have been unbanned from {ctx.guild}")
-            break
-
 # ERROR HANDLING ---------------------------------
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('You do not have the correct role/permissions for this command.')
 
-
 bot.run(TOKEN)
-
     
